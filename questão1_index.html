@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Livraria">
+    <meta name="author" content="Tatiana Cabral e Hélio Senna Valentim">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIVRARIA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h3 {
+            color: #34495e;
+            margin: 25px 0 15px 0;
+        }
+
+        form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: inline-block;
+            width: 120px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: calc(100% - 125px);
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input[type="submit"],
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button[onclick*="clearForm"] {
+            background-color: #95a5a6;
+        }
+
+        button[onclick*="edit"] {
+            background-color: #2ecc71;
+        }
+
+        button[onclick*="remove"] {
+            background-color: #e74c3c;
+        }
+
+        input[type="submit"]:hover,
+        button:hover {
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #34495e;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        @media (max-width: 768px) {
+            input[type="text"],
+            input[type="number"] {
+                width: 100%;
+            }
+
+            label {
+                display: block;
+                margin-bottom: 5px;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+    <script>
+        // Função para carregar todos os registros
+        function loadData() {
+            fetch('crud_book.php?action=read')
+            .then(response => response.json())
+            .then(data => {
+                let table = document.getElementById('data');
+                table.innerHTML = '';
+                data.forEach(row => {
+                    table.innerHTML += `
+                        <tr>
+                            <td>${row.id}</td>
+                            <td>${row.titulo}</td>
+                            <td>${row.autor}</td>
+                            <td>${row.public}</td>
+                            <td>
+                                <button onclick="edit(${row.id}, '${row.titulo}', '${row.autor}', '${row.public}')">Editar</button>
+                                <button onclick="remove(${row.id})">Deletar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        // Função para adicionar ou editar um registro
+        function save() {
+            let id = document.getElementById('id').value;
+            let titulo = document.getElementById('titulo').value;
+            let autor = document.getElementById('autor').value;
+            let public = document.getElementById('public').value;
+
+            let formData = new FormData();
+            formData.append('id', id);
+            formData.append('titulo', titulo);
+            formData.append('autor', autor);
+            formData.append('public', public);
+
+            let action = id ? 'update' : 'create';
+
+            fetch(`crud_book.php?action=${action}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                loadData();
+                clearForm();
+            });
+        }
+
+        // Função para preencher o formulário para edição
+        function edit(id, titulo, autor, public) {
+            document.getElementById('id').value = id;
+            document.getElementById('titulo').value = titulo;
+            document.getElementById('autor').value = autor;
+            document.getElementById('public').value = public;
+        }
+
+        // Função para remover um registro
+        function remove(id) {
+            if (confirm('Tem certeza que deseja excluir?')) {
+                fetch(`crud_book.php?action=delete&id=${id}`)
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    loadData();
+                });
+            }
+        }
+
+        // Função para limpar o formulário
+        function clearForm() {
+            document.getElementById('id').value = '';
+            document.getElementById('titulo').value = '';
+            document.getElementById('autor').value = '';
+            document.getElementById('public').value = '';
+        }
+        window.onload = loadData;
+    </script>
+</head>
+<body>
+    <h2>TRABALHO QUESTAO 1 LIVRARIA (CRUD com PHP, JavaScript e SQLite)</h2>
+    <form onsubmit="event.preventDefault(); save();">
+        <input type="hidden" id="id">
+        <label for="titulo">Titulo:</label>
+        <input type="text" id="titulo" required><br><br>
+
+        <label for="autor">Autor:</label>
+        <input type="text" id="autor" required><br><br>
+
+        <label for="public">Ano Publicação:</label>
+        <input type="number" id="public" name="public" min="1900" max="2040"><br><br>
+             
+        <input type="submit" value="Salvar">
+        <button type="button" onclick="clearForm()">Limpar</button>
+    </form>
+
+    <h3>Registros</h3>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Titulo</th>
+                <th>Autor</th>
+                <th>Ano Publicação</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="data">
+        </tbody>
+    </table>
+</body>
+</html>
